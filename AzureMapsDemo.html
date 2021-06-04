@@ -14,6 +14,7 @@
     <!-- Add references to the Azure Maps Map control JavaScript and CSS files. -->
     <link rel="stylesheet" href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.css" type="text/css" />
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
+    <script src="./config.js"></script>
 
     <script>
 		var stops = [
@@ -141,7 +142,7 @@
 				//Add your Azure Maps subscription key to the map SDK. Get an Azure Maps key at https://azure.com/maps
                 authOptions: {
                     authType: 'subscriptionKey',
-                    subscriptionKey: 'xxx'
+                    subscriptionKey: subscriptionKey
                 }
             });
 

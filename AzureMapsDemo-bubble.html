@@ -16,6 +16,12 @@
     <script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/2/atlas.min.js"></script>
     <script src="./config.js"></script>
 
+    <!-- Add a reference to the Azure Maps Services Module JavaScript file. -->
+    <script src="https://atlas.microsoft.com/sdk/javascript/service/2/atlas-service.min.js"></script>
+
+    <!-- Add reference to the Azure Maps Spatial IO module. -->
+    <script src="https://atlas.microsoft.com/sdk/javascript/spatial/0/atlas-spatial.min.js"></script>
+
     <script>
 		var stops = [
 			{ name: 'Dublin Airport', position: [-6.2499098, 53.4264481] },
@@ -26,7 +32,150 @@
 			{ name: 'Dublin Airport', position: [-6.2499098, 53.4264481] },
 		];
 		
+		var locations = [
+			{
+				position: [-7.5500556, 52.2327443],
+				name: 'Mahon Falls',
+                shortName: 'A',
+				imageUri: './mahon-falls.jpg',
+				type: 'nature',
+                stop: 'Tipperary'
+			},
+			{
+				position: [-7.8926409, 52.5200763],
+				name: 'Rock of Cashel',
+                shortName: 'B',
+				imageUri: './rock-of-cashel.jpg',
+				type: 'castle',
+                stop: 'Tipperary'
+			},
+			{
+				position: [-8.110989, 52.3039923],
+				name: 'Mitchelstown Caves',
+                shortName: 'C',
+				imageUri: './Mitchelstown-Caves.jpg',
+				type: 'nature',
+                stop: 'Tipperary'
+			},
+			{
+				position: [-8.5708847, 51.9290922],
+				name: 'Blarney Castle',
+                shortName: 'D',
+				imageUri: './blarney-castle.jpg',
+				type: 'castle',
+                stop: 'Tipperary'
+			},
+			{
+				position: [-7.9292638, 52.3745471],
+				name: 'Cahir Castle',
+                shortName: 'E',
+				imageUri: './cahir-castle.jpg',
+				type: 'castle',
+                stop: 'Tipperary'
+			},
+			{
+				position: [-7.8702908, 52.6395472],
+				name: 'Holy Cross Abbey',
+                shortName: 'F',
+				imageUri: './holy-cross-abbey.jpg',
+				type: 'castle',
+                stop: 'Tipperary'
+			},
+			{
+				position: [-9.9466897, 51.948061],
+				name: 'Ring of Kerry',
+                shortName: 'G',
+				imageUri: './ring-of-kerry.jpg',
+				type: 'nature',
+                stop: 'Killarney'
+			},
+			{
+				position: [-9.5063647, 52.0022355],
+				name: 'Torc Waterfall',
+                shortName: 'H',
+				imageUri: './Torc-Waterfall.jpg',
+				type: 'nature',
+                stop: 'Killarney'
+			},
+			{
+				position: [-9.5063245, 52.0180696],
+				name: 'Muckross House',
+                shortName: 'I',
+				imageUri: './Muckross-House.jpg',
+				type: 'castle',
+                stop: 'Killarney'
+			},
+			{
+				position: [-9.448392, 52.971535],
+				name: 'Cliffs of Moher',
+                shortName: 'J',
+				imageUri: './cliffs-of-moher.jpg',
+				type: 'nature',
+                stop: 'Ennis'
+			},
+			{
+				position: [-8.9283168, 53.1422901],
+				name: 'Dunguaire Castle',
+                shortName: 'K',
+				imageUri: './dunguaire-castle.jpg',
+				type: 'castle',
+                stop: 'Ennis'
+			},
+			{
+				position: [-9.3473379, 53.0409745],
+				name: 'Doolin Cave',
+                shortName: 'L',
+				imageUri: './doolin-cave.jpg',
+				type: 'nature',
+                stop: 'Ennis'
+			},
+			{
+				position: [-9.1458561, 53.0891282],
+				name: 'Ailwee Cave',
+                shortName: 'M',
+				imageUri: './Ailwee-Cave.jpg',
+				type: 'nature',
+                stop: 'Ennis'
+			},
+			{
+				position: [-8.8198831, 52.6988732],
+				name: 'Bunratty Castle',
+                shortName: 'N',
+				imageUri: './bunratty-castle.jpg',
+				type: 'castle',
+                stop: 'Ennis'
+			},
+			{
+				position: [-7.3713907, 53.477197],
+				name: 'Belvedere House Gardens & Park',
+                shortName: 'O',
+				imageUri: './Belvedere-enchanted-garden.jpg',
+				type: 'family',
+                stop: 'Athlone'
+			},
+			{
+				position: [-7.7398253, 53.4002096],
+				name: 'Dún na Sí Amenity & Heritage Park',
+                shortName: 'P',
+				imageUri: './dun-na-si.jpg',
+				type: 'family',
+                stop: 'Athlone'
+			}
+		];
+
+        var defaultColor = '#F4CCCC';
+        var colorScale = [
+            0, '#09e076',//1
+            1, '#0bbf67',//3
+            2, '#f7e305',//5
+            3, '#f7c707',
+            4, '#f78205',
+            5, '#f75e05',
+            6, '#f72505'
+        ];
+
         var map, datasource, datasourceLeaderlines, client, popup, searchInput, resultsPanel, searchInputLength, centerMapOnResults;
+        var routeURL, datasourceIsochrones;
 
         //The minimum number of characters needed in the search input before a search is performed.
         var minSearchInputLength = 3;
@@ -48,6 +197,12 @@
                 }
             });
 
+            //Use MapControlCredential to share authentication between a map control and the service module.
+            var pipeline = atlas.service.MapsURL.newPipeline(new atlas.service.MapControlCredential(map));
+
+            //Construct the RouteURL object
+            routeURL = new atlas.service.RouteURL(pipeline);
+
             //Wait until the map resources are ready.
             map.events.add('ready', function () {
 
@@ -56,33 +211,148 @@
                     position: 'top-right'
                 });
 
+                
+				
+				datasourceLeaderlines = new atlas.source.DataSource();
+                map.sources.add(datasourceLeaderlines);
+				
+				map.layers.add(new atlas.layer.LineLayer(datasourceLeaderlines, null, {
+					strokeColor: '#515A45',
+					strokeWidth: 1,
+					strokeDashArray: [2, 3, 4],
+				}));
+				
+				locations.forEach(location => {
+					var color = 'DodgerBlue';
+					if (location.type === 'nature') {color = '#0A9D0E'; }
+					else if (location.type === 'family') { color = '#F49200'; }
+					else if (location.type === 'castle') { color = '#7F6000'; }
+					
+					var popup = new atlas.Popup({
+						  content: '<div style="padding:10px">' + location.name + '<br /><img style="width:200px;" src="' + location.imageUri + '"/></div>',
+						  pixelOffset: [0, 0], //[0, -30],
+						  position: location.position,
+						  draggable: true,
+                          showPointer: false
+						});
+						
+					var marker = new atlas.HtmlMarker({
+						color: color,
+						text: location.shortName,
+						position: location.position,
+						popup: popup
+					  });
+					  
+					//https://github.com/Azure-Samples/AzureMapsCodeSamples/blob/master/AzureMapsCodeSamples/Popups/Popups%20with%20leader%20lines.html
+					createLeaderLine(popup);
+
+					map.markers.add(marker);
+					  
+					//Add a click event to toggle the popup.
+					map.events.add('click',marker, () => {
+						marker.togglePopup();
+					});
+						
+				});
+
                 //Create a data source and add it to the map.
                 datasource = new atlas.source.DataSource();
                 map.sources.add(datasource);
 				
-				var positions = [];
-				var i = 0;
-				stops.forEach(element => {
-					positions[i] = element.position;
-					i++;
-					var marker = new atlas.HtmlMarker({
-						color: 'DodgerBlue',
-						text: '',
-						position: element.position,
-						popup: new atlas.Popup({
-						  content: '<div style="padding:10px">' + element.name + '</div>',
-						  pixelOffset: [0, -30]
-						})
-					  });
+				datasourceIsochrones = new atlas.source.DataSource();
+                map.sources.add(datasourceIsochrones);
+                var positions = [];
+                var routeRangePromises = [];
+                var i = 0;
+                stops.forEach(stop => {
+                    positions.push(stop.position);
 
-					  map.markers.add(marker);
+                    var locationsForStop = locations.filter(x => x.stop == stop.name);
+                    var stopColor = colorScale[(i*2)+1];
+
+                    var locationsForStopDiv = '';
+                    locationsForStop.forEach(location => {
+                        locationsForStopDiv += '<div style="float:left;padding:0px 5px 0px 5px;margin:5px;"><div style="width:160px;white-space:normal;">' + location.shortName + ' - ' + location.name + '</div><div><img style="max-width:160px;max-height:100px;" src="' + location.imageUri + '"/></div></div>';
+                    });
+
+                    var popupContent = '<div style="width:400px;"><div style="padding:10px;">' + i + ' - ' + stop.name + '</div>' + locationsForStopDiv + '</div>';
+
+                    var marker = new atlas.HtmlMarker({
+                        color: i > 0 && i < stops.length-1 ? stopColor : 'DodgerBlue',
+                        text: i > 0 && i < stops.length-1 ? i : '',
+                        position: stop.position,
+                        popup: new atlas.Popup({
+                            content: popupContent,
+                            pixelOffset: [0, -30],
+                            draggable: true,
+                            fillColor: stopColor,
+                            showPointer: false
+                        })
+                    });
+
+                    map.markers.add(marker);
 					  
-					  //Add a click event to toggle the popup.
-						map.events.add('click',marker, () => {
-							marker.togglePopup();
-						});
-				});
-				
+                    //Add a click event to toggle the popup.
+                    map.events.add('click',marker, () => {
+                        marker.togglePopup();
+                    });
+
+                    //calculate isochrones, polygons on how far to travel in 1 hour
+                    routeRangePromises.push(routeURL.calculateRouteRange(atlas.service.Aborter.timeout(10000), stop.position, {
+                        travelMode: 'car',
+                        timeBudgetInSec: 3600 //1 hour.
+                    }));
+                    i++;
+                });
+
+                Promise.all(routeRangePromises).then(values => {
+                    var isochrones = [];
+                    for (var i = 0; i < values.length; i++) {
+                        if (i == 0 || i == values.length-1)
+                        {
+                            //skip start and finish
+                            continue;
+                        }
+
+                        var data = values[i].geojson.getFeatures();
+
+                        //Close the polygon.
+                        data.features[0].geometry.coordinates[0].push(data.features[0].geometry.coordinates[0][0]);
+                        data.features[0].properties.index = i;
+                        var isochrone = data.features[0];
+                        isochrones.push(isochrone);
+                    }
+                    
+                    datasourceIsochrones.add(isochrones);
+                });
+
+				// map.layers.add(new atlas.layer.PolygonLayer(datasourceIsochrones, null, {
+                //     fillColor: '#F4CCCC',
+                //     fillOpacity: 0.7
+				// }));
+                // map.layers.add(new atlas.layer.LineLayer(datasourceIsochrones, null, {
+                //     strokeColor: '#E06666',
+                //     strokeWidth: 1
+				// }));
+
+                
+                //Create a stepped expression based on the color scale. 
+                var steppedExp = [
+                    'step',
+                    ['get', 'index'],
+                    defaultColor
+                ];
+                steppedExp = steppedExp.concat(colorScale);
+
+				map.layers.add(new atlas.layer.PolygonLayer(datasourceIsochrones, null, {
+                    fillColor: steppedExp,//'#F4CCCC',
+                    fillOpacity: 0.7
+				}));
+                map.layers.add(new atlas.layer.LineLayer(datasourceIsochrones, null, {
+                    strokeColor: steppedExp,//'#E06666',
+                    strokeWidth: 1
+				}));
+
 				var linestring = new atlas.data.LineString(positions)
 				
 				datasource.add(linestring);
@@ -92,7 +362,49 @@
 				}));
 			});
         }
+		
+		function createLeaderLine(popup) {
+            //Get the position of the popup.
+            var position = popup.getOptions().position;
 
+            //Create a line that connects the position to the popup. Wrap it with the Shape class to make it easy to update.
+            var leaderLine = new atlas.Shape(new atlas.data.LineString([position, position]));
+
+            //Add the line to the data source.
+            datasourceLeaderlines.add(leaderLine);
+
+            //Add the line to a custom property of the popup so we can easily retrieve it later.
+            popup.leaderLine = leaderLine;
+
+            //Add a drag event to the popup to monitor its movement.
+            map.events.add('drag', popup, popupDragged);
+            map.events.add('close', popup, popupClosed);
+        }
+
+        function updateLeaderLine(popup) {
+            //Get the leader line coordinates, and update the second coordinate with the position of the popup.
+            var c = popup.leaderLine.getCoordinates();
+            c[1] = popup.getOptions().position;
+            popup.leaderLine.setCoordinates(c);
+        }
+
+        function closeLeaderLine(popup) {
+            var c = popup.leaderLine.getCoordinates();
+            c[1] = c[0];
+            popup.leaderLine.setCoordinates(c);
+        }
+
+        function popupDragged(e) {
+            if (e.target.leaderLine) {
+                updateLeaderLine(e.target);
+            }
+        }
+
+        function popupClosed(e) {
+            if (e.target.leaderLine) {
+                closeLeaderLine(e.target);
+            }
+        }
     </script>
     <style>
         html,
