@@ -210,8 +210,6 @@
                 map.controls.add(new atlas.control.ZoomControl(), {
                     position: 'top-right'
                 });
-
-                
 				
 				datasourceLeaderlines = new atlas.source.DataSource();
                 map.sources.add(datasourceLeaderlines);
@@ -223,6 +221,7 @@
 				}));
 				
 				locations.forEach(location => {
+					var text = location.shortName;
 					var color = 'DodgerBlue';
 					if (location.type === 'nature') {color = '#0A9D0E'; }
 					else if (location.type === 'family') { color = '#F49200'; }
@@ -238,7 +237,7 @@
 						
 					var marker = new atlas.HtmlMarker({
 						color: color,
-						text: location.shortName,
+						text: text,
 						position: location.position,
 						popup: popup
 					  });
@@ -258,7 +257,7 @@
                 //Create a data source and add it to the map.
                 datasource = new atlas.source.DataSource();
                 map.sources.add(datasource);
-				
+
 				datasourceIsochrones = new atlas.source.DataSource();
                 map.sources.add(datasourceIsochrones);
                 var positions = [];
@@ -267,9 +266,9 @@
                 stops.forEach(stop => {
                     positions.push(stop.position);
 
-                    var locationsForStop = locations.filter(x => x.stop == stop.name);
                     var stopColor = colorScale[(i*2)+1];
 
+                    var locationsForStop = locations.filter(x => x.stop == stop.name);
                     var locationsForStopDiv = '';
                     locationsForStop.forEach(location => {
                         locationsForStopDiv += '<div style="float:left;padding:0px 5px 0px 5px;margin:5px;"><div style="width:160px;white-space:normal;">' + location.shortName + ' - ' + location.name + '</div><div><img style="max-width:160px;max-height:100px;" src="' + location.imageUri + '"/></div></div>';
@@ -326,16 +325,6 @@
                     datasourceIsochrones.add(isochrones);
                 });
 
-				// map.layers.add(new atlas.layer.PolygonLayer(datasourceIsochrones, null, {
-                //     fillColor: '#F4CCCC',
-                //     fillOpacity: 0.7
-				// }));
-                // map.layers.add(new atlas.layer.LineLayer(datasourceIsochrones, null, {
-                //     strokeColor: '#E06666',
-                //     strokeWidth: 1
-				// }));
-
-                
                 //Create a stepped expression based on the color scale. 
                 var steppedExp = [
                     'step',

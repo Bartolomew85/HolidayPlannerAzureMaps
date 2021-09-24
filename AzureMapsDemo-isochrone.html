@@ -34,24 +34,6 @@
 		
 		var locations = [
 			{
-				position: [-7.3713907, 53.477197],
-				name: 'Belvedere House Gardens & Park',
-				imageUri: './Belvedere-enchanted-garden.jpg',
-				type: 'family'
-			},
-			{
-				position: [-7.7398253, 53.4002096],
-				name: 'Dún na Sí Amenity & Heritage Park',
-				imageUri: './dun-na-si.jpg',
-				type: 'family'
-			},
-			{
-				position: [-9.448392, 52.971535],
-				name: 'Cliffs of Moher',
-				imageUri: './cliffs-of-moher.jpg',
-				type: 'nature'
-			},
-			{
 				position: [-7.5500556, 52.2327443],
 				name: 'Mahon Falls',
 				imageUri: './mahon-falls.jpg',
@@ -61,30 +43,6 @@
 				position: [-7.8926409, 52.5200763],
 				name: 'Rock of Cashel',
 				imageUri: './rock-of-cashel.jpg',
-				type: 'castle'
-			},
-			{
-				position: [-9.9466897, 51.948061],
-				name: 'Ring of Kerry',
-				imageUri: './ring-of-kerry.jpg',
-				type: 'nature'
-			},
-			{
-				position: [-9.5063647, 52.0022355],
-				name: 'Torc Waterfall',
-				imageUri: './Torc-Waterfall.jpg',
-				type: 'nature'
-			},
-			{
-				position: [-8.9283168, 53.1422901],
-				name: 'Dunguaire Castle',
-				imageUri: './dunguaire-castle.jpg',
-				type: 'castle'
-			},
-			{
-				position: [-9.5063245, 52.0180696],
-				name: 'Muckross House',
-				imageUri: './Muckross-House.jpg',
 				type: 'castle'
 			},
 			{
@@ -112,6 +70,36 @@
 				type: 'castle'
 			},
 			{
+				position: [-9.9466897, 51.948061],
+				name: 'Ring of Kerry',
+				imageUri: './ring-of-kerry.jpg',
+				type: 'nature'
+			},
+			{
+				position: [-9.5063647, 52.0022355],
+				name: 'Torc Waterfall',
+				imageUri: './Torc-Waterfall.jpg',
+				type: 'nature'
+			},
+			{
+				position: [-9.5063245, 52.0180696],
+				name: 'Muckross House',
+				imageUri: './Muckross-House.jpg',
+				type: 'castle'
+			},
+			{
+				position: [-9.448392, 52.971535],
+				name: 'Cliffs of Moher',
+				imageUri: './cliffs-of-moher.jpg',
+				type: 'nature'
+			},
+			{
+				position: [-8.9283168, 53.1422901],
+				name: 'Dunguaire Castle',
+				imageUri: './dunguaire-castle.jpg',
+				type: 'castle'
+			},
+			{
 				position: [-9.3473379, 53.0409745],
 				name: 'Doolin Cave',
 				imageUri: './doolin-cave.jpg',
@@ -129,6 +117,18 @@
 				imageUri: './bunratty-castle.jpg',
 				type: 'castle'
 			},
+			{
+				position: [-7.3713907, 53.477197],
+				name: 'Belvedere House Gardens & Park',
+				imageUri: './Belvedere-enchanted-garden.jpg',
+				type: 'family'
+			},
+			{
+				position: [-7.7398253, 53.4002096],
+				name: 'Dún na Sí Amenity & Heritage Park',
+				imageUri: './dun-na-si.jpg',
+				type: 'family'
+			}
 		];
 
         var defaultColor = '#F4CCCC';
@@ -178,25 +178,74 @@
                 map.controls.add(new atlas.control.ZoomControl(), {
                     position: 'top-right'
                 });
+				
+				datasourceLeaderlines = new atlas.source.DataSource();
+                map.sources.add(datasourceLeaderlines);
+				
+				map.layers.add(new atlas.layer.LineLayer(datasourceLeaderlines, null, {
+					strokeColor: '#515A45',
+					strokeWidth: 1,
+					strokeDashArray: [2, 3, 4],
+				}));
+				
+				locations.forEach(location => {
+					var text = '';
+					var color = 'DodgerBlue';
+					if (location.type === 'nature') { text = 'N'; color = '#0A9D0E'; }
+					else if (location.type === 'family') { text = 'F'; color = '#F49200'; }
+					else if (location.type === 'castle') { text = 'C'; color = '#7F6000'; }
+					
+					var popup = new atlas.Popup({
+						  content: '<div style="padding:10px">' + location.name + '<br /><img style="width:200px;" src="' + location.imageUri + '"/></div>',
+						  pixelOffset: [0, 0], //[0, -30],
+						  position: location.position,
+						  draggable: true,
+                          showPointer: false
+						});
+						
+					var marker = new atlas.HtmlMarker({
+						color: color,
+						text: text,
+						position: location.position,
+						popup: popup
+					  });
+					  
+					//https://github.com/Azure-Samples/AzureMapsCodeSamples/blob/master/AzureMapsCodeSamples/Popups/Popups%20with%20leader%20lines.html
+					createLeaderLine(popup);
+
+					map.markers.add(marker);
+					  
+					//Add a click event to toggle the popup.
+					map.events.add('click',marker, () => {
+						marker.togglePopup();
+					});
+						
+				});
 
                 //Create a data source and add it to the map.
                 datasource = new atlas.source.DataSource();
                 map.sources.add(datasource);
-				
+
 				datasourceIsochrones = new atlas.source.DataSource();
                 map.sources.add(datasourceIsochrones);
                 var positions = [];
                 var routeRangePromises = [];
                 var i = 0;
-                stops.forEach(element => {
-                    positions.push(element.position);
+                stops.forEach(stop => {
+                    positions.push(stop.position);
+
+                    var stopColor = colorScale[(i*2)+1];
+
+                    var popupContent = '<div style="padding:10px">' + stop.name + '</div>';
+
                     var marker = new atlas.HtmlMarker({
-                        color: i > 0 && i < stops.length-1 ? colorScale[(i*2)+1] : 'DodgerBlue',
+                        color: i > 0 && i < stops.length-1 ? stopColor : 'DodgerBlue',
                         text: i > 0 && i < stops.length-1 ? i : '',
-                        position: element.position,
+                        position: stop.position,
                         popup: new atlas.Popup({
-                            content: '<div style="padding:10px">' + element.name + '</div>',
-                            pixelOffset: [0, -30]
+                            content: popupContent,
+                            pixelOffset: [0, -30],
+                            showPointer: false
                         })
                     });
 
@@ -208,7 +257,7 @@
                     });
 
                     //calculate isochrones, polygons on how far to travel in 1 hour
-                    routeRangePromises.push(routeURL.calculateRouteRange(atlas.service.Aborter.timeout(10000), element.position, {
+                    routeRangePromises.push(routeURL.calculateRouteRange(atlas.service.Aborter.timeout(10000), stop.position, {
                         travelMode: 'car',
                         timeBudgetInSec: 3600 //1 hour.
                     }));
@@ -236,16 +285,6 @@
                     datasourceIsochrones.add(isochrones);
                 });
 
-				// map.layers.add(new atlas.layer.PolygonLayer(datasourceIsochrones, null, {
-                //     fillColor: '#F4CCCC',
-                //     fillOpacity: 0.7
-				// }));
-                // map.layers.add(new atlas.layer.LineLayer(datasourceIsochrones, null, {
-                //     strokeColor: '#E06666',
-                //     strokeWidth: 1
-				// }));
-
-                
                 //Create a stepped expression based on the color scale. 
                 var steppedExp = [
                     'step',
@@ -255,11 +294,11 @@
                 steppedExp = steppedExp.concat(colorScale);
 
 				map.layers.add(new atlas.layer.PolygonLayer(datasourceIsochrones, null, {
-                    fillColor: steppedExp,//'#F4CCCC',
+                    fillColor: steppedExp,//'#F4CCCC', //
                     fillOpacity: 0.7
 				}));
                 map.layers.add(new atlas.layer.LineLayer(datasourceIsochrones, null, {
-                    strokeColor: steppedExp,//'#E06666',
+                    strokeColor: steppedExp,//'#E06666', //
                     strokeWidth: 1
 				}));
 
@@ -270,48 +309,6 @@
 					strokeColor: 'DodgerBlue',
 					strokeWidth: 2
 				}));
-				
-				datasourceLeaderlines = new atlas.source.DataSource();
-                map.sources.add(datasourceLeaderlines);
-				
-				map.layers.add(new atlas.layer.LineLayer(datasourceLeaderlines, null, {
-					strokeColor: '#515A45',
-					strokeWidth: 1,
-					strokeDashArray: [2, 3, 4],
-				}));
-				
-				locations.forEach(element => {
-					var text = '';
-					var color = 'DodgerBlue';
-					if (element.type === 'nature') { text = 'N'; color = '#0A9D0E'; }
-					else if (element.type === 'family') { text = 'F'; color = '#F49200'; }
-					else if (element.type === 'castle') { text = 'C'; color = '#7F6000'; }
-					
-					var popup = new atlas.Popup({
-						  content: '<div style="padding:10px">' + element.name + '<br /><img style="width:200px;" src="' + element.imageUri + '"/></div>',
-						  pixelOffset: [0, 0], //[0, -30],
-						  position: element.position,
-						  draggable: true
-						});
-						
-					var marker = new atlas.HtmlMarker({
-						color: color,
-						text: text,
-						position: element.position,
-						popup: popup
-					  });
-					  
-					//https://github.com/Azure-Samples/AzureMapsCodeSamples/blob/master/AzureMapsCodeSamples/Popups/Popups%20with%20leader%20lines.html
-					createLeaderLine(popup);
-
-					map.markers.add(marker);
-					  
-					//Add a click event to toggle the popup.
-					map.events.add('click',marker, () => {
-						marker.togglePopup();
-					});
-						
-				});
 			});
         }
 		
@@ -353,7 +350,6 @@
         }
 
         function popupClosed(e) {
-            console.log(e.target);
             if (e.target.leaderLine) {
                 closeLeaderLine(e.target);
             }

@@ -28,24 +28,6 @@
 		
 		var locations = [
 			{
-				position: [-7.3713907, 53.477197],
-				name: 'Belvedere House Gardens & Park',
-				imageUri: './Belvedere-enchanted-garden.jpg',
-				type: 'family'
-			},
-			{
-				position: [-7.7398253, 53.4002096],
-				name: 'Dún na Sí Amenity & Heritage Park',
-				imageUri: './dun-na-si.jpg',
-				type: 'family'
-			},
-			{
-				position: [-9.448392, 52.971535],
-				name: 'Cliffs of Moher',
-				imageUri: './cliffs-of-moher.jpg',
-				type: 'nature'
-			},
-			{
 				position: [-7.5500556, 52.2327443],
 				name: 'Mahon Falls',
 				imageUri: './mahon-falls.jpg',
@@ -55,30 +37,6 @@
 				position: [-7.8926409, 52.5200763],
 				name: 'Rock of Cashel',
 				imageUri: './rock-of-cashel.jpg',
-				type: 'castle'
-			},
-			{
-				position: [-9.9466897, 51.948061],
-				name: 'Ring of Kerry',
-				imageUri: './ring-of-kerry.jpg',
-				type: 'nature'
-			},
-			{
-				position: [-9.5063647, 52.0022355],
-				name: 'Torc Waterfall',
-				imageUri: './Torc-Waterfall.jpg',
-				type: 'nature'
-			},
-			{
-				position: [-8.9283168, 53.1422901],
-				name: 'Dunguaire Castle',
-				imageUri: './dunguaire-castle.jpg',
-				type: 'castle'
-			},
-			{
-				position: [-9.5063245, 52.0180696],
-				name: 'Muckross House',
-				imageUri: './Muckross-House.jpg',
 				type: 'castle'
 			},
 			{
@@ -106,6 +64,36 @@
 				type: 'castle'
 			},
 			{
+				position: [-9.9466897, 51.948061],
+				name: 'Ring of Kerry',
+				imageUri: './ring-of-kerry.jpg',
+				type: 'nature'
+			},
+			{
+				position: [-9.5063647, 52.0022355],
+				name: 'Torc Waterfall',
+				imageUri: './Torc-Waterfall.jpg',
+				type: 'nature'
+			},
+			{
+				position: [-9.5063245, 52.0180696],
+				name: 'Muckross House',
+				imageUri: './Muckross-House.jpg',
+				type: 'castle'
+			},
+			{
+				position: [-9.448392, 52.971535],
+				name: 'Cliffs of Moher',
+				imageUri: './cliffs-of-moher.jpg',
+				type: 'nature'
+			},
+			{
+				position: [-8.9283168, 53.1422901],
+				name: 'Dunguaire Castle',
+				imageUri: './dunguaire-castle.jpg',
+				type: 'castle'
+			},
+			{
 				position: [-9.3473379, 53.0409745],
 				name: 'Doolin Cave',
 				imageUri: './doolin-cave.jpg',
@@ -123,6 +111,18 @@
 				imageUri: './bunratty-castle.jpg',
 				type: 'castle'
 			},
+			{
+				position: [-7.3713907, 53.477197],
+				name: 'Belvedere House Gardens & Park',
+				imageUri: './Belvedere-enchanted-garden.jpg',
+				type: 'family'
+			},
+			{
+				position: [-7.7398253, 53.4002096],
+				name: 'Dún na Sí Amenity & Heritage Park',
+				imageUri: './dun-na-si.jpg',
+				type: 'family'
+			}
 		];
         var map, datasource, datasourceLeaderlines, client, popup, searchInput, resultsPanel, searchInputLength, centerMapOnResults;
 
@@ -153,43 +153,6 @@
                 map.controls.add(new atlas.control.ZoomControl(), {
                     position: 'top-right'
                 });
-
-                //Create a data source and add it to the map.
-                datasource = new atlas.source.DataSource();
-                map.sources.add(datasource);
-				
-				datasourceIsochrones = new atlas.source.DataSource();
-                var positions = [];
-                var routeRangePromises = [];
-                var i = 0;
-                stops.forEach(element => {
-                    positions[i] = element.position;
-                    i++;
-                    var marker = new atlas.HtmlMarker({
-                        color: 'DodgerBlue',
-                        text: '',
-                        position: element.position,
-                        popup: new atlas.Popup({
-                            content: '<div style="padding:10px">' + element.name + '</div>',
-                            pixelOffset: [0, -30]
-                        })
-                    });
-
-                    map.markers.add(marker);
-					  
-                    //Add a click event to toggle the popup.
-                    map.events.add('click',marker, () => {
-                        marker.togglePopup();
-                    });
-                });
-
-				var linestring = new atlas.data.LineString(positions)
-				
-				datasource.add(linestring);
-				map.layers.add(new atlas.layer.LineLayer(datasource, null, {
-					strokeColor: 'DodgerBlue',
-					strokeWidth: 2
-				}));
 				
 				datasourceLeaderlines = new atlas.source.DataSource();
                 map.sources.add(datasourceLeaderlines);
@@ -200,24 +163,25 @@
 					strokeDashArray: [2, 3, 4],
 				}));
 				
-				locations.forEach(element => {
+				locations.forEach(location => {
 					var text = '';
 					var color = 'DodgerBlue';
-					if (element.type === 'nature') { text = 'N'; color = '#0A9D0E'; }
-					else if (element.type === 'family') { text = 'F'; color = '#F49200'; }
-					else if (element.type === 'castle') { text = 'C'; color = '#7F6000'; }
+					if (location.type === 'nature') { text = 'N'; color = '#0A9D0E'; }
+					else if (location.type === 'family') { text = 'F'; color = '#F49200'; }
+					else if (location.type === 'castle') { text = 'C'; color = '#7F6000'; }
 					
 					var popup = new atlas.Popup({
-						  content: '<div style="padding:10px">' + element.name + '<br /><img style="width:200px;" src="' + element.imageUri + '"/></div>',
+						  content: '<div style="padding:10px">' + location.name + '<br /><img style="width:200px;" src="' + location.imageUri + '"/></div>',
 						  pixelOffset: [0, 0], //[0, -30],
-						  position: element.position,
-						  draggable: true
+						  position: location.position,
+						  draggable: true,
+                          showPointer: false
 						});
 						
 					var marker = new atlas.HtmlMarker({
 						color: color,
 						text: text,
-						position: element.position,
+						position: location.position,
 						popup: popup
 					  });
 					  
@@ -232,6 +196,47 @@
 					});
 						
 				});
+
+                //Create a data source and add it to the map.
+                datasource = new atlas.source.DataSource();
+                map.sources.add(datasource);
+
+                var positions = [];
+                var routeRangePromises = [];
+                var i = 0;
+                stops.forEach(stop => {
+                    positions.push(stop.position);
+
+                    var popupContent = '<div style="padding:10px">' + stop.name + '</div>';
+
+                    var marker = new atlas.HtmlMarker({
+                        color: 'DodgerBlue',
+                        text: '',
+                        position: stop.position,
+                        popup: new atlas.Popup({
+                            content: popupContent,
+                            pixelOffset: [0, -30],
+                            showPointer: false
+                        })
+                    });
+
+                    map.markers.add(marker);
+					  
+                    //Add a click event to toggle the popup.
+                    map.events.add('click',marker, () => {
+                        marker.togglePopup();
+                    });
+
+                    i++;
+                });
+
+				var linestring = new atlas.data.LineString(positions)
+				
+				datasource.add(linestring);
+				map.layers.add(new atlas.layer.LineLayer(datasource, null, {
+					strokeColor: 'DodgerBlue',
+					strokeWidth: 2
+				}));
 			});
         }
 		
@@ -250,6 +255,7 @@
 
             //Add a drag event to the popup to monitor its movement.
             map.events.add('drag', popup, popupDragged);
+            map.events.add('close', popup, popupClosed);
         }
 
         function updateLeaderLine(popup) {
@@ -259,9 +265,21 @@
             popup.leaderLine.setCoordinates(c);
         }
 
+        function closeLeaderLine(popup) {
+            var c = popup.leaderLine.getCoordinates();
+            c[1] = c[0];
+            popup.leaderLine.setCoordinates(c);
+        }
+
         function popupDragged(e) {
             if (e.target.leaderLine) {
                 updateLeaderLine(e.target);
+            }
+        }
+
+        function popupClosed(e) {
+            if (e.target.leaderLine) {
+                closeLeaderLine(e.target);
             }
         }
     </script>
